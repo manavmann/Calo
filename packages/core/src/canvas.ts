@@ -84,6 +84,7 @@ export function normalizePlannerItems(items: PlannerItem[]): CaloEvent[] {
       id: `${kind}-${item.plannable_id}`,
       kind,
       title: item.plannable.title,
+      // TODO: personal events get the student's name here, which leaks into titles.
       course: item.context_name,
       url: new URL(item.html_url, CANVAS_ORIGIN).href,
       start: item.plannable_date,
