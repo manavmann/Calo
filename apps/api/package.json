@@ -1,0 +1,25 @@
+{
+  "name": "@calo/api",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Hono API: session auth, Canvas connections, sync engine, ICS feed, extension ingest.",
+  "type": "module",
+  "scripts": {
+    "dev": "node --env-file=.env --watch src/server.ts",
+    "dev:session": "node --env-file=.env scripts/dev-session.ts",
+    "db:push": "drizzle-kit push",
+    "db:studio": "drizzle-kit studio",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@hono/node-server": "2.1.1",
+    "drizzle-orm": "0.45.3",
+    "hono": "4.13.9",
+    "postgres": "3.4.9"
+  },
+  "devDependencies": {
+    "@types/node": "24.13.6",
+    "drizzle-kit": "0.31.11",
+    "typescript": "7.0.2"
+  }
+}

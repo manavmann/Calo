@@ -1,0 +1,17 @@
+# Local Postgres for development. The credentials are dev-only, and the port is
+# bound to loopback so the database isn't reachable from the rest of the network.
+services:
+  postgres:
+    image: postgres:18
+    environment:
+      POSTGRES_USER: calo
+      POSTGRES_PASSWORD: calo
+      POSTGRES_DB: calo
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      # Postgres 18's image keeps its data under here (in 18/docker).
+      - pgdata:/var/lib/postgresql
+
+volumes:
+  pgdata:

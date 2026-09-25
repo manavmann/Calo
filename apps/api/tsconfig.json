@@ -1,0 +1,12 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    // Node runs these files directly from source, so imports name the real
+    // .ts file and only syntax Node can strip (no enums etc.) is allowed.
+    "noEmit": true,
+    "allowImportingTsExtensions": true,
+    "erasableSyntaxOnly": true,
+    "types": ["node"]
+  },
+  "include": ["src", "scripts", "drizzle.config.ts"]
+}
