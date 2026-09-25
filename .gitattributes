@@ -1,0 +1,2 @@
+# ICS fixtures must keep Canvas's CRLF line endings byte for byte.
+*.ics -text

@@ -4,7 +4,10 @@ export interface CaloEvent {
   id: string;
   kind: "assignment" | "quiz" | "discussion" | "event";
   title: string;
-  /** The course's name, or the student's own nickname for it if they set one. */
+  /**
+   * The course's name, or the student's own nickname for it if they set one.
+   * Canvas's calendar feed only gives the course code, and "" for personal events.
+   */
   course: string;
   /** Absolute link to the item on Canvas. */
   url: string;
@@ -13,8 +16,10 @@ export interface CaloEvent {
   /** ISO 8601 UTC end of an event. null for deadlines: a moment, not a range. */
   end: string | null;
   /**
-   * All-day events keep Canvas's timestamp (midnight in the creator's
+   * All-day items keep Canvas's timestamp (midnight in the creator's
    * timezone) in `start`; turning that into a calendar date is up to the output.
+   * Canvas's calendar feed only gives a date, so items from it hold midnight
+   * UTC, and it marks assignments due at 11:59 PM all-day too.
    */
   allDay: boolean;
 }

@@ -1,0 +1,143 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:icalendar-ruby
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+X-WR-CALNAME:Alex Student Calendar (Canvas)
+X-WR-CALDESC:Calendar events for the user\, Alex Student
+BEGIN:VEVENT
+DTSTAMP:20260921T194200Z
+UID:event-assignment-1204417
+DTSTART;VALUE=DATE:20261002
+CLASS:PUBLIC
+DESCRIPTION:Implement a singly linked list with insert\, remove and reverse
+ .\n\nSubmit list.cpp and list.h to CourSys\; late submissions lose 10% per
+  day.
+SEQUENCE:0
+SUMMARY:Assignment 2: Linked Lists [CMPT 225 D100]
+URL:https://canvas.sfu.ca/calendar?include_contexts=course_62841&month=10&y
+ ear=2026#assignment_1204417
+X-ALT-DESC;FMTTYPE=text/html:<p>Implement a singly linked list with <code>i
+ nsert</code>\, <code>remove</code> and <code>reverse</code>.</p>\n<p>Submi
+ t <strong>list.cpp</strong> and <strong>list.h</strong> to <a href="https:
+ //coursys.sfu.ca/">CourSys</a>\; late submissions lose 10% per day.</p>
+END:VEVENT
+BEGIN:VEVENT
+DTSTAMP:20260918T221500Z
+UID:event-assignment-1204460
+DTSTART;VALUE=DATE:20261005
+CLASS:PUBLIC
+SEQUENCE:0
+SUMMARY:Lab 4 [optional]: stacks\, queues\; printf("\\n") [CMPT 225 D100]
+URL:https://canvas.sfu.ca/calendar?include_contexts=course_62841&month=10&y
+ ear=2026#assignment_1204460
+END:VEVENT
+BEGIN:VEVENT
+DTSTAMP:20260915T170300Z
+UID:event-assignment-1204502
+DTSTART:20261006T173000Z
+DTEND:20261006T173000Z
+CLASS:PUBLIC
+SEQUENCE:0
+SUMMARY:Quiz 3: Taylor Series [MATH 152 D100]
+URL:https://canvas.sfu.ca/calendar?include_contexts=course_62907&month=10&y
+ ear=2026#assignment_1204502
+END:VEVENT
+BEGIN:VEVENT
+DTSTAMP:20260922T160800Z
+UID:event-assignment-1205120
+DTSTART:20261008T213000Z
+DTEND:20261008T213000Z
+CLASS:PUBLIC
+SEQUENCE:0
+SUMMARY:Lab Report 2 – Projectile Motion: Résumé & Uncertainty Analysis
+  🚀 [PHYS 140 D100]
+URL:https://canvas.sfu.ca/calendar?include_contexts=course_63015&month=10&y
+ ear=2026#assignment_1205120
+END:VEVENT
+BEGIN:VEVENT
+DTSTAMP:20260923T004100Z
+UID:event-assignment-override-88213
+DTSTART:20261010T000000Z
+DTEND:20261010T000000Z
+CLASS:PUBLIC
+SEQUENCE:0
+SUMMARY:Midterm Reflection (D102) [MATH 152 D100]
+URL:https://canvas.sfu.ca/calendar?include_contexts=course_62907&month=10&y
+ ear=2026#assignment_1204588
+END:VEVENT
+BEGIN:VEVENT
+DTSTAMP:20260920T183000Z
+UID:event-sub-assignment-40211
+DTSTART;VALUE=DATE:20261003
+CLASS:PUBLIC
+SEQUENCE:0
+SUMMARY:Week 5 Discussion Reply to Topic [CMPT 225 D100]
+URL:https://canvas.sfu.ca/calendar?include_contexts=course_62841&month=10&y
+ ear=2026#assignment_1205300
+END:VEVENT
+BEGIN:VEVENT
+DTSTAMP:20260921T020500Z
+UID:event-assignment-override-88390
+DTSTART;VALUE=DATE:20261009
+CLASS:PUBLIC
+SEQUENCE:0
+SUMMARY:Week 6 Discussion Reply to Topic (D102) [CMPT 225 D100]
+URL:https://canvas.sfu.ca/calendar?include_contexts=course_62841&month=10&y
+ ear=2026#assignment_1205411
+END:VEVENT
+BEGIN:VEVENT
+DTSTAMP:20260921T020500Z
+UID:event-assignment-override-88391
+DTSTART;VALUE=DATE:20261011
+CLASS:PUBLIC
+SEQUENCE:0
+SUMMARY:Week 6 Discussion Required Replies (2) (D102) [CMPT 225 D100]
+URL:https://canvas.sfu.ca/calendar?include_contexts=course_62841&month=10&y
+ ear=2026#assignment_1205411
+END:VEVENT
+BEGIN:VEVENT
+DTSTAMP:20260924T031200Z
+UID:event-calendar-event-3311002
+DTSTART:20261007T230000Z
+DTEND:20261008T003000Z
+CLASS:PUBLIC
+LOCATION:
+SEQUENCE:0
+SUMMARY:Study group
+URL:https://canvas.sfu.ca/calendar?include_contexts=user_1234567&month=10&y
+ ear=2026#calendar_event_3311002
+END:VEVENT
+BEGIN:VEVENT
+DTSTAMP:20260902T201900Z
+UID:event-calendar-event-3308871
+DTSTART;VALUE=DATE:20261012
+CLASS:PUBLIC
+DESCRIPTION:University closed for Thanksgiving. Monday labs are cancelled\;
+  Tuesday labs run as usual.
+LOCATION:
+SEQUENCE:0
+SUMMARY:No lecture – Thanksgiving [CMPT 225 D100]
+URL:https://canvas.sfu.ca/calendar?include_contexts=course_62841&month=10&y
+ ear=2026#calendar_event_3308871
+X-ALT-DESC;FMTTYPE=text/html:<p>University closed for Thanksgiving. Monday 
+ labs are cancelled\; Tuesday labs run as usual.</p>
+END:VEVENT
+BEGIN:VEVENT
+DTSTAMP:20260916T225400Z
+UID:event-calendar-event-3310245
+DTSTART:20261015T013000Z
+DTEND:20261015T032000Z
+CLASS:PUBLIC
+DESCRIPTION:Covers chapters 1–4. Bring a calculator\; a formula sheet is 
+ provided.\n\nSeating by last name: A–L in AQ 3150\, M–Z in AQ 3159.
+LOCATION:AQ 3150\, 8888 University Dr\, Burnaby
+SEQUENCE:0
+SUMMARY:Midterm 1 [PHYS 140 D100]
+URL:https://canvas.sfu.ca/calendar?include_contexts=course_63015&month=10&y
+ ear=2026#calendar_event_3310245
+X-ALT-DESC;FMTTYPE=text/html:<p>Covers chapters 1–4. Bring a calculator\;
+  a formula sheet is provided.</p>\n<p>Seating by last name: <strong>A–L<
+ /strong> in AQ 3150\, <strong>M–Z</strong> in AQ 3159.</p>
+END:VEVENT
+END:VCALENDAR
