@@ -23,3 +23,9 @@ pnpm --filter @calo/api dev:session you@sfu.ca
 It prints a `calo_session` cookie to add in devtools for http://localhost:3000,
 plus a ready-to-run curl command. `pnpm --filter @calo/api db:studio` opens a
 browser view of the database.
+
+Once that user has connected Canvas, pull their events into the database:
+
+```sh
+pnpm --filter @calo/api sync you@sfu.ca
+```

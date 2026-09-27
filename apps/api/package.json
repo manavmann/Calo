@@ -7,8 +7,10 @@
   "scripts": {
     "dev": "node --env-file=.env --watch src/server.ts",
     "dev:session": "node --env-file=.env scripts/dev-session.ts",
+    "sync": "node --env-file=.env scripts/sync.ts",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
+    "test": "vitest run",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
@@ -21,6 +23,8 @@
   "devDependencies": {
     "@types/node": "24.13.6",
     "drizzle-kit": "0.31.11",
-    "typescript": "7.0.2"
+    "typescript": "7.0.2",
+    "vite": "8.3.0",
+    "vitest": "5.0.1"
   }
 }

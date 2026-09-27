@@ -1,4 +1,12 @@
-import { pgEnum, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import {
+  boolean,
+  pgEnum,
+  pgTable,
+  primaryKey,
+  text,
+  timestamp,
+  uuid,
+} from "drizzle-orm/pg-core";
 
 export const users = pgTable("users", {
   // Random rather than sequential: ids reach the browser, and shouldn't reveal
@@ -35,5 +43,36 @@ export const canvasConnections = pgTable("canvas_connections", {
   secret: text("secret").notNull(),
   connectedAt: timestamp("connected_at", { withTimezone: true }).notNull().defaultNow(),
 });
+
+export const eventKind = pgEnum("event_kind", ["assignment", "quiz", "discussion", "event"]);
+
+// The last version sync saw of each of a user's Canvas items (see sync.ts).
+// Sync never deletes a row: an item gone from Canvas gets deleted_at, so the
+// outputs can tell it's gone and remove it from the student's calendar.
+export const syncedEvents = pgTable(
+  "synced_events",
+  {
+    // References users, not canvas_connections: disconnecting shouldn't drop
+    // the record of what was sent to the student's calendar.
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    /** CaloEvent.id, e.g. "quiz-4821". Unique per user, not overall. */
+    eventId: text("event_id").notNull(),
+    kind: eventKind("kind").notNull(),
+    title: text("title").notNull(),
+    course: text("course").notNull(),
+    url: text("url").notNull(),
+    // Named like Canvas's own columns; END on its own is reserved in SQL.
+    start: timestamp("start_at", { withTimezone: true }).notNull(),
+    end: timestamp("end_at", { withTimezone: true }),
+    allDay: boolean("all_day").notNull(),
+    /** contentHash() of the event as last synced. */
+    contentHash: text("content_hash").notNull(),
+    /** When sync found the item gone from Canvas. Null while it's live. */
+    deletedAt: timestamp("deleted_at", { withTimezone: true }),
+  },
+  (t) => [primaryKey({ columns: [t.userId, t.eventId] })],
+);
 
 export type User = typeof users.$inferSelect;
