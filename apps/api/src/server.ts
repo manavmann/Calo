@@ -1,6 +1,7 @@
 import { serve } from "@hono/node-server";
 import { Hono } from "hono";
 import { deleteCookie, getCookie } from "hono/cookie";
+import { canvasConnection } from "./canvas-connection.ts";
 import {
   invalidateSession,
   requireSession,
@@ -24,6 +25,8 @@ app.post("/api/logout", async (c) => {
   deleteCookie(c, SESSION_COOKIE, SESSION_COOKIE_OPTIONS);
   return c.body(null, 204);
 });
+
+app.route("/api/canvas/connection", canvasConnection);
 
 serve({ fetch: app.fetch, port: 3000 }, (info) => {
   console.log(`API listening on http://localhost:${info.port}`);
