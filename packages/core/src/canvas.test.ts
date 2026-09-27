@@ -1,6 +1,13 @@
 import { readFileSync } from "node:fs";
-import { describe, expect, it } from "vitest";
-import { normalizePlannerItems, type PlannerItem } from "./canvas.js";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import {
+  canvasFeedUrl,
+  fetchCanvasFeed,
+  fetchPlannerItems,
+  normalizePlannerItems,
+  verifyCanvasToken,
+  type PlannerItem,
+} from "./canvas.js";
 
 // A real /api/v1/planner/items response from canvas.sfu.ca, cut down to a few
 // items of each type. The student's name, user id, and the signed tokens on
@@ -88,5 +95,110 @@ describe("normalizePlannerItems", () => {
     expect(normalizePlannerItems([extended])).toMatchObject([
       { start: "2026-10-01T06:59:59Z" },
     ]);
+  });
+});
+
+// Stands in for the network: answers each request with the next response.
+function stubFetch(...responses: Response[]) {
+  const fetchMock = vi.fn<typeof fetch>(async () => responses.shift()!);
+  vi.stubGlobal("fetch", fetchMock);
+  return fetchMock;
+}
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
+
+function page(body: unknown[], next?: string): Response {
+  return Response.json(body, {
+    headers: next ? { link: `<${next}>; rel="next"` } : {},
+  });
+}
+
+const START = new Date("2026-09-01T00:00:00Z");
+const END = new Date("2026-12-31T00:00:00Z");
+const FEED = "https://canvas.sfu.ca/feeds/calendars/user_AbC123.ics";
+
+describe("fetchPlannerItems", () => {
+  it("follows next links on canvas.sfu.ca, with the token and no redirects on every page", async () => {
+    const fetchMock = stubFetch(
+      page(items.slice(0, 2), "https://canvas.sfu.ca/api/v1/planner/items?page=2"),
+      page(items.slice(2)),
+    );
+    expect(await fetchPlannerItems("t0ken", START, END)).toEqual(items);
+    expect(fetchMock.mock.calls).toEqual([
+      [
+        expect.stringMatching(/^https:\/\/canvas\.sfu\.ca\/api\/v1\/planner\/items\?/),
+        { headers: { Authorization: "Bearer t0ken" }, redirect: "error" },
+      ],
+      [
+        "https://canvas.sfu.ca/api/v1/planner/items?page=2",
+        { headers: { Authorization: "Bearer t0ken" }, redirect: "error" },
+      ],
+    ]);
+  });
+
+  // The next page's URL comes from Canvas's response, not from Calo.
+  it.each([
+    "https://evil.example/api/v1/planner/items?page=2",
+    "https://canvas.sfu.ca.evil.example/api/v1/planner/items?page=2",
+    "https://canvas.sfu.ca@evil.example/api/v1/planner/items?page=2",
+    "http://canvas.sfu.ca/api/v1/planner/items?page=2",
+  ])("refuses to send the token to a next link at %s", async (next) => {
+    const fetchMock = stubFetch(page(items, next), page([]));
+    await expect(fetchPlannerItems("t0ken", START, END)).rejects.toThrow(
+      "Refusing to send the Canvas token",
+    );
+    expect(fetchMock).toHaveBeenCalledOnce();
+  });
+});
+
+describe("verifyCanvasToken", () => {
+  it("asks canvas.sfu.ca who the token belongs to, without following redirects", async () => {
+    const fetchMock = stubFetch(Response.json({ id: 1 }));
+    await verifyCanvasToken("t0ken");
+    expect(fetchMock).toHaveBeenCalledWith("https://canvas.sfu.ca/api/v1/users/self", {
+      headers: { Authorization: "Bearer t0ken" },
+      redirect: "error",
+    });
+  });
+});
+
+describe("canvasFeedUrl", () => {
+  it.each([
+    [FEED, FEED],
+    ["HTTPS://CANVAS.SFU.CA/feeds/calendars/user_AbC123.ics", FEED],
+    [`${FEED}?foo=1#bar`, FEED],
+  ])("accepts %s", (input, expected) => {
+    expect(canvasFeedUrl(input)).toBe(expected);
+  });
+
+  it.each([
+    "https://evil.example/feeds/calendars/user_AbC123.ics",
+    "https://canvas.sfu.ca.evil.example/feeds/calendars/user_AbC123.ics",
+    "https://canvas.sfu.ca@evil.example/feeds/calendars/user_AbC123.ics",
+    "http://canvas.sfu.ca/feeds/calendars/user_AbC123.ics",
+    "https://canvas.sfu.ca:8443/feeds/calendars/user_AbC123.ics",
+    "https://canvas.sfu.ca/feeds/calendars/course_AbC123.ics",
+    "https://canvas.sfu.ca/courses/18634",
+    "not a url",
+  ])("rejects %s", (input) => {
+    expect(canvasFeedUrl(input)).toBeNull();
+  });
+});
+
+describe("fetchCanvasFeed", () => {
+  it("fetches the feed without following redirects", async () => {
+    const fetchMock = stubFetch(new Response("BEGIN:VCALENDAR"));
+    expect(await fetchCanvasFeed(FEED)).toBe("BEGIN:VCALENDAR");
+    expect(fetchMock).toHaveBeenCalledWith(FEED, { redirect: "error" });
+  });
+
+  it("refuses a URL that isn't a canvas.sfu.ca feed, without fetching it", async () => {
+    const fetchMock = stubFetch();
+    await expect(
+      fetchCanvasFeed("https://evil.example/feeds/calendars/user_AbC123.ics"),
+    ).rejects.toThrow("Refusing to fetch a Canvas feed");
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 });
