@@ -11,3 +11,17 @@ export {
 } from "./canvas.js";
 export { generateIcs } from "./ics.js";
 export { parseCanvasFeed } from "./canvas-feed.js";
+export type { GoogleClient } from "./google.js";
+export {
+  createGoogleCalendar,
+  deleteGoogleCalendar,
+  deleteGoogleEvent,
+  exchangeGoogleCode,
+  GOOGLE_SCOPE,
+  googleAuthUrl,
+  googleCalendarExists,
+  GoogleError,
+  refreshGoogleAccessToken,
+  revokeGoogleToken,
+  upsertGoogleEvent,
+} from "./google.js";

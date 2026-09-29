@@ -1,6 +1,5 @@
-import type { CaloEvent } from "./event.js";
+import { allDayDate, displayTitle, type CaloEvent } from "./event.js";
 
-const DAY_MS = 24 * 60 * 60 * 1000;
 const utf8 = new TextEncoder();
 
 /**
@@ -26,7 +25,7 @@ export function generateIcs(events: CaloEvent[], now: Date): string {
     if (event.allDay) {
       // A DATE start with no end means one whole day. Canvas's own feed
       // writes all-day items the same way.
-      lines.push(`DTSTART;VALUE=DATE:${formatDate(event.start)}`);
+      lines.push(`DTSTART;VALUE=DATE:${allDayDate(event.start).replaceAll("-", "")}`);
     } else {
       lines.push(`DTSTART:${formatDateTime(new Date(event.start))}`);
       // DTEND must be after DTSTART. Without one, a timed start is an
@@ -35,9 +34,8 @@ export function generateIcs(events: CaloEvent[], now: Date): string {
         lines.push(`DTEND:${formatDateTime(new Date(event.end))}`);
       }
     }
-    const summary = event.course ? `${event.title} [${event.course}]` : event.title;
     lines.push(
-      `SUMMARY:${escapeText(summary)}`,
+      `SUMMARY:${escapeText(displayTitle(event))}`,
       // A URI, not TEXT: escaping would corrupt a link with a comma in it.
       `URL:${event.url}`,
       "END:VEVENT",
@@ -50,17 +48,6 @@ export function generateIcs(events: CaloEvent[], now: Date): string {
 // 2026-10-03T06:59:59.000Z -> 20261003T065959Z
 function formatDateTime(date: Date): string {
   return date.toISOString().replace(/[-:]|\.\d{3}/g, "");
-}
-
-// Canvas stores an all-day date as midnight in the creator's timezone.
-// For UTC-11:59 through UTC+12 that's within 12h of the date's UTC midnight
-// (Math.round sends the +12 half-day tie upward, to the right date).
-// Known and accepted misses: UTC-12 (uninhabited) and UTC+13/+14 (NZ
-// summer time, Tonga, Samoa, eastern Kiribati). That only affects events
-// whose creator's Canvas timezone is set there.
-function formatDate(iso: string): string {
-  const midnight = Math.round(Date.parse(iso) / DAY_MS) * DAY_MS;
-  return new Date(midnight).toISOString().slice(0, 10).replaceAll("-", "");
 }
 
 // RFC 5545 TEXT escaping. Backslashes go first, or the backslashes added

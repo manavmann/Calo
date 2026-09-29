@@ -69,10 +69,34 @@ export const syncedEvents = pgTable(
     allDay: boolean("all_day").notNull(),
     /** contentHash() of the event as last synced. */
     contentHash: text("content_hash").notNull(),
+    /**
+     * contentHash() of the version last written to the student's Google
+     * calendar, or null if it isn't there. Where it differs from what should
+     * be there, the next push has work to do (see google-push.ts).
+     */
+    googleHash: text("google_hash"),
     /** When sync found the item gone from Canvas. Null while it's live. */
     deletedAt: timestamp("deleted_at", { withTimezone: true }),
   },
   (t) => [primaryKey({ columns: [t.userId, t.eventId] })],
 );
+
+// One per user. Connecting again replaces the token but keeps calendar_id, so
+// reconnecting the same Google account carries on with the same calendar.
+export const googleConnections = pgTable("google_connections", {
+  userId: uuid("user_id")
+    .primaryKey()
+    .references(() => users.id, { onDelete: "cascade" }),
+  /**
+   * The OAuth refresh token, encrypted (see encryption.ts). Access tokens
+   * aren't stored: each push gets a new one.
+   */
+  refreshToken: text("refresh_token").notNull(),
+  /** The student's Calo calendar in Google. Null until the first push makes it. */
+  calendarId: text("calendar_id"),
+  /** When Google stopped accepting the refresh token. Null while it works. */
+  revokedAt: timestamp("revoked_at", { withTimezone: true }),
+  connectedAt: timestamp("connected_at", { withTimezone: true }).notNull().defaultNow(),
+});
 
 export type User = typeof users.$inferSelect;

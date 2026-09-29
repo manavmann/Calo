@@ -12,7 +12,8 @@ export const SESSION_COOKIE = "calo_session";
 // Secure everywhere, not just in production: Chrome and Firefox accept Secure
 // cookies on http://localhost, so there's no dev/prod switch to get wrong.
 // Lax keeps the cookie off cross-site POSTs and fetches, which stops CSRF as
-// long as no GET route changes state.
+// long as no GET route changes state. The Google OAuth callback is the one
+// that does, and it's protected by its state check instead.
 export const SESSION_COOKIE_OPTIONS = {
   path: "/",
   httpOnly: true,
