@@ -99,4 +99,20 @@ export const googleConnections = pgTable("google_connections", {
   connectedAt: timestamp("connected_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
+// One per user, made when the student asks for a feed URL (see feed.ts).
+// Asking again replaces it, which is how a leaked URL gets shut off.
+export const feeds = pgTable("feeds", {
+  userId: uuid("user_id")
+    .primaryKey()
+    .references(() => users.id, { onDelete: "cascade" }),
+  /** SHA-256 of the token in the feed URL. Feed requests are looked up by it. */
+  tokenHash: text("token_hash").notNull().unique(),
+  /**
+   * The same token, encrypted (see encryption.ts), so the student can be shown
+   * their URL again. The hash can't be used for that, and this can't be looked
+   * up by, since each encryption comes out different.
+   */
+  token: text("token").notNull(),
+});
+
 export type User = typeof users.$inferSelect;

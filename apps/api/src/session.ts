@@ -24,7 +24,8 @@ export const SESSION_COOKIE_OPTIONS = {
 // Only the hash is stored, so reading the sessions table (a leaked backup,
 // db:studio on a screen-share) doesn't hand out working sessions. A fast hash
 // is enough: the token is 256 random bits, so there's nothing to brute-force.
-function hashToken(token: string): string {
+// feed.ts stores feed tokens the same way.
+export function hashToken(token: string): string {
   return createHash("sha256").update(token).digest("hex");
 }
 

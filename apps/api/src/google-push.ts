@@ -4,13 +4,13 @@ import {
   googleCalendarExists,
   refreshGoogleAccessToken,
   upsertGoogleEvent,
-  type CaloEvent,
 } from "@calo/core";
 import { and, eq, isNotNull, isNull, sql } from "drizzle-orm";
 import { db } from "./db.ts";
 import { decrypt } from "./encryption.ts";
 import { googleClient } from "./google-client.ts";
 import { googleConnections, syncedEvents } from "./schema.ts";
+import { toEvent } from "./sync.ts";
 
 export type PushResult =
   | { status: "not connected" }
@@ -122,18 +122,4 @@ async function setGoogleHash(userId: string, eventId: string, googleHash: string
     .update(syncedEvents)
     .set({ googleHash })
     .where(and(eq(syncedEvents.userId, userId), eq(syncedEvents.eventId, eventId)));
-}
-
-// The reverse of toRow in sync.ts.
-function toEvent(row: typeof syncedEvents.$inferSelect): CaloEvent {
-  return {
-    id: row.eventId,
-    kind: row.kind,
-    title: row.title,
-    course: row.course,
-    url: row.url,
-    start: row.start.toISOString(),
-    end: row.end === null ? null : row.end.toISOString(),
-    allDay: row.allDay,
-  };
 }

@@ -64,3 +64,18 @@ http://localhost:3000/api/google/connect and allow access. The next
 While the app's publishing status is **Testing**, only its test users can
 connect, and Google expires their refresh tokens after 7 days. `sync` then
 reports that the token no longer works; open `/api/google/connect` again.
+
+## ICS feed
+
+Apple Calendar, or any app that can subscribe to a calendar by URL, can
+subscribe to a feed of the events `sync` has stored. With the `calo_session`
+cookie from `dev:session`, make the feed's URL:
+
+```sh
+curl -X POST -H "Cookie: calo_session=..." http://localhost:3000/api/feed
+```
+
+It returns a path like `/f/<token>.ics`. In Apple Calendar on the same Mac,
+choose File > New Calendar Subscription and enter `http://localhost:3000`
+followed by that path. `GET /api/feed` shows the current path again. Another
+POST makes a new URL, and the old one stops working.

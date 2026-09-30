@@ -2,6 +2,7 @@ import { serve } from "@hono/node-server";
 import { Hono } from "hono";
 import { deleteCookie, getCookie } from "hono/cookie";
 import { canvasConnection } from "./canvas-connection.ts";
+import { feed, feedUrl } from "./feed.ts";
 import { googleConnection } from "./google-connection.ts";
 import {
   invalidateSession,
@@ -29,6 +30,8 @@ app.post("/api/logout", async (c) => {
 
 app.route("/api/canvas/connection", canvasConnection);
 app.route("/api/google", googleConnection);
+app.route("/api/feed", feedUrl);
+app.route("/f", feed);
 
 serve({ fetch: app.fetch, port: 3000 }, (info) => {
   console.log(`API listening on http://localhost:${info.port}`);

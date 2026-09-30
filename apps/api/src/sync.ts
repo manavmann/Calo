@@ -147,3 +147,18 @@ function toRow(userId: string, event: CaloEvent) {
     contentHash: contentHash(event),
   };
 }
+
+// The reverse of toRow. Both outputs (google-push.ts, feed.ts) read rows
+// through this, so they can't turn the same row into different events.
+export function toEvent(row: typeof syncedEvents.$inferSelect): CaloEvent {
+  return {
+    id: row.eventId,
+    kind: row.kind,
+    title: row.title,
+    course: row.course,
+    url: row.url,
+    start: row.start.toISOString(),
+    end: row.end === null ? null : row.end.toISOString(),
+    allDay: row.allDay,
+  };
+}
