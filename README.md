@@ -36,6 +36,10 @@ pnpm --filter @calo/api sync you@sfu.ca
 If they've connected Google Calendar, the same command then writes the events
 to a "Calo" calendar in their Google account.
 
+`pnpm test` runs every package's tests. The API's run against Postgres, so
+`docker compose` has to be up; they use their own `calo_test` database, which
+is recreated on every run and never touches the one above.
+
 ## Google Calendar
 
 Calo writes to a calendar it creates in the student's Google account, using the
