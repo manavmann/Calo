@@ -2,10 +2,12 @@
 // Calendar if they've connected it. Until syncs run on a schedule, this is
 // the way to run one:
 //   pnpm --filter @calo/api sync you@sfu.ca
+// For a user on the browser extension, it only pushes: the extension sends
+// their Canvas items itself.
 import { eq } from "drizzle-orm";
 import { db } from "../src/db.ts";
 import { pushToGoogle } from "../src/google-push.ts";
-import { users } from "../src/schema.ts";
+import { canvasConnections, users } from "../src/schema.ts";
 import { syncUser } from "../src/sync.ts";
 
 const email = process.argv[2]?.trim().toLowerCase();
@@ -14,15 +16,23 @@ if (!email) {
   process.exit(1);
 }
 
-const [user] = await db.select({ id: users.id }).from(users).where(eq(users.email, email));
+const [user] = await db
+  .select({ id: users.id, method: canvasConnections.method })
+  .from(users)
+  .leftJoin(canvasConnections, eq(canvasConnections.userId, users.id))
+  .where(eq(users.email, email));
 if (!user) {
   console.error(`No user with the email ${email}.`);
   process.exit(1);
 }
 
-const { added, changed, deleted } = await syncUser(user.id);
-// Printed before the push, so they show even if it fails.
-printIds({ added, changed, deleted });
+if (user.method === "extension") {
+  console.log("Canvas: comes from the browser extension, so there's nothing to pull");
+} else {
+  const { added, changed, deleted } = await syncUser(user.id);
+  // Printed before the push, so they show even if it fails.
+  printIds({ added, changed, deleted });
+}
 
 const push = await pushToGoogle(user.id);
 await db.$client.end();

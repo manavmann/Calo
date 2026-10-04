@@ -2,6 +2,7 @@ import { serve } from "@hono/node-server";
 import { Hono } from "hono";
 import { deleteCookie, getCookie } from "hono/cookie";
 import { canvasConnection } from "./canvas-connection.ts";
+import { extension } from "./extension.ts";
 import { feed, feedUrl } from "./feed.ts";
 import { googleConnection } from "./google-connection.ts";
 import {
@@ -29,6 +30,7 @@ app.post("/api/logout", async (c) => {
 });
 
 app.route("/api/canvas/connection", canvasConnection);
+app.route("/api/extension", extension);
 app.route("/api/google", googleConnection);
 app.route("/api/feed", feedUrl);
 app.route("/f", feed);

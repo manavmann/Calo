@@ -86,7 +86,8 @@ async function save(userId: string, method: "token" | "feed", plaintext: string)
     .values({ userId, method, secret })
     .onConflictDoUpdate({
       target: canvasConnections.userId,
-      set: { method, secret, connectedAt: sql`now()` },
+      // Clearing the hash unpairs an extension: its device token stops working.
+      set: { method, secret, deviceTokenHash: null, connectedAt: sql`now()` },
     })
     .returning({ method: canvasConnections.method, connectedAt: canvasConnections.connectedAt });
   return { connected: true, ...row! };

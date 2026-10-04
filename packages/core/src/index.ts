@@ -2,6 +2,7 @@
 export type { CaloEvent } from "./event.js";
 export type { PlannerItem } from "./canvas.js";
 export {
+  CANVAS_ORIGIN,
   CanvasError,
   canvasFeedUrl,
   fetchCanvasFeed,

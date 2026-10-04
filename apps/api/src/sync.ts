@@ -4,6 +4,7 @@ import {
   normalizePlannerItems,
   parseCanvasFeed,
   type CaloEvent,
+  type PlannerItem,
 } from "@calo/core";
 import { and, eq, inArray, sql } from "drizzle-orm";
 import { db } from "./db.ts";
@@ -13,23 +14,31 @@ import { contentHash, diffEvents } from "./sync-diff.ts";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-// The planner window the token path asks for.
-const PLANNER_PAST_DAYS = 14;
-const PLANNER_FUTURE_DAYS = 90;
+// The planner window the token path asks for. The extension asks for the same
+// one (see extension.ts), so both give the same events.
+export const PLANNER_PAST_DAYS = 14;
+export const PLANNER_FUTURE_DAYS = 90;
 
 // The feed has no window parameter. Canvas serves a user feed from 30 days
 // back to 366 ahead (CalendarEventsApiController#public_feed in canvas-lms).
 const FEED_PAST_DAYS = 30;
 const FEED_FUTURE_DAYS = 366;
 
+type SyncResult = { added: string[]; changed: string[]; deleted: string[] };
+
+/** What a pull from Canvas found, and where a missing event counts as deleted. */
+interface Pull {
+  events: CaloEvent[];
+  ambiguousIds: string[];
+  window: { start: Date; end: Date };
+}
+
 /**
  * Brings the user's synced_events in line with Canvas, and returns the ids
  * the calendar has to add, update, or remove. Unchanged rows aren't written.
  * Assumes only one sync runs for a user at a time.
  */
-export async function syncUser(
-  userId: string,
-): Promise<{ added: string[]; changed: string[]; deleted: string[] }> {
+export async function syncUser(userId: string): Promise<SyncResult> {
   const [connection] = await db
     .select()
     .from(canvasConnections)
@@ -37,12 +46,39 @@ export async function syncUser(
   if (!connection) {
     throw new Error(`User ${userId} has no Canvas connection`);
   }
+  // There's nothing to pull with: the extension posts this user's items
+  // itself, through ingestPlannerItems.
+  if (connection.method === "extension") {
+    throw new Error(`User ${userId}'s Canvas items come from the extension`);
+  }
 
   // Pulled before the transaction, so it isn't held open during a network
   // call. A Canvas error throws here, before anything is written, so a failed
-  // pull can't look like every event was deleted.
-  const pull = await pullFromCanvas(connection.method, decrypt(connection.secret, userId));
+  // pull can't look like every event was deleted. The secret is there for a
+  // token or feed: schema.ts checks it.
+  const pull = await pullFromCanvas(connection.method, decrypt(connection.secret!, userId));
+  return applyPull(userId, pull);
+}
 
+/**
+ * syncUser for the extension, with the planner items it pulled from Canvas
+ * between `pulled.start` and `pulled.end`. Those come from the extension's
+ * clock, not the server's: worked out again here, the window could take in
+ * days the extension never asked Canvas for, and delete their events.
+ */
+export async function ingestPlannerItems(
+  userId: string,
+  items: PlannerItem[],
+  pulled: { start: Date; end: Date },
+): Promise<SyncResult> {
+  return applyPull(userId, {
+    events: normalizePlannerItems(items),
+    ambiguousIds: [],
+    window: trustedWindow(pulled.start, pulled.end),
+  });
+}
+
+async function applyPull(userId: string, pull: Pull): Promise<SyncResult> {
   return db.transaction(async (tx) => {
     const stored = await tx
       .select({
@@ -98,25 +134,25 @@ export async function syncUser(
 // Known limitation: the planner calls a graded quiz or discussion quiz-N or
 // discussion-N, and the feed calls the same item assignment-M. A user who
 // switches methods has those tombstoned under one id and added under the other.
-async function pullFromCanvas(method: "token" | "feed", secret: string) {
+async function pullFromCanvas(method: "token" | "feed", secret: string): Promise<Pull> {
   const now = Date.now();
   if (method === "token") {
-    const items = await fetchPlannerItems(
-      secret,
-      new Date(now - PLANNER_PAST_DAYS * DAY_MS),
-      new Date(now + PLANNER_FUTURE_DAYS * DAY_MS),
-    );
+    const start = new Date(now - PLANNER_PAST_DAYS * DAY_MS);
+    const end = new Date(now + PLANNER_FUTURE_DAYS * DAY_MS);
     return {
-      events: normalizePlannerItems(items),
+      events: normalizePlannerItems(await fetchPlannerItems(secret, start, end)),
       ambiguousIds: [],
-      window: trustedWindow(now, PLANNER_PAST_DAYS, PLANNER_FUTURE_DAYS),
+      window: trustedWindow(start, end),
     };
   }
   const { events, ambiguousIds } = parseCanvasFeed(await fetchCanvasFeed(secret));
   return {
     events,
     ambiguousIds,
-    window: trustedWindow(now, FEED_PAST_DAYS, FEED_FUTURE_DAYS),
+    window: trustedWindow(
+      new Date(now - FEED_PAST_DAYS * DAY_MS),
+      new Date(now + FEED_FUTURE_DAYS * DAY_MS),
+    ),
   };
 }
 
@@ -126,10 +162,10 @@ async function pullFromCanvas(method: "token" | "feed", secret: string) {
 // rounds its dates to whole days, so the exact edges can't be trusted. Missing
 // a deletion at the edge costs little; a wrong one takes a real deadline off
 // the student's calendar.
-function trustedWindow(now: number, pastDays: number, futureDays: number) {
+function trustedWindow(start: Date, end: Date) {
   return {
-    start: new Date(now - (pastDays - 1) * DAY_MS),
-    end: new Date(now + (futureDays - 1) * DAY_MS),
+    start: new Date(start.getTime() + DAY_MS),
+    end: new Date(end.getTime() - DAY_MS),
   };
 }
 

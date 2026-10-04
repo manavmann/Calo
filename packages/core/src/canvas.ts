@@ -2,7 +2,7 @@ import type { CaloEvent } from "./event.js";
 
 // The only Canvas we talk to. It's a constant, not a parameter, so a token
 // can't be sent to another host by passing the wrong URL.
-const CANVAS_ORIGIN = "https://canvas.sfu.ca";
+export const CANVAS_ORIGIN = "https://canvas.sfu.ca";
 
 // The student's own feed, from Calendar -> Calendar Feed. A course's feed
 // (course_...) only has that one course, so it isn't accepted.

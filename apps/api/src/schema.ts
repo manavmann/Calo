@@ -1,5 +1,7 @@
+import { sql } from "drizzle-orm";
 import {
   boolean,
+  check,
   pgEnum,
   pgTable,
   primaryKey,
@@ -27,21 +29,52 @@ export const sessions = pgTable("sessions", {
   expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
 });
 
-export const canvasMethod = pgEnum("canvas_method", ["token", "feed"]);
+export const canvasMethod = pgEnum("canvas_method", ["token", "feed", "extension"]);
 
-// One per user, so connecting again replaces it: a token and a feed for the
-// same account hold the same deadlines, and sync reads from one place.
-export const canvasConnections = pgTable("canvas_connections", {
+// One per user, so connecting again replaces it, whatever the method: they
+// all hold the same deadlines, and sync reads from one place. Two at once
+// would fight, since the feed and the planner give some items different ids.
+export const canvasConnections = pgTable(
+  "canvas_connections",
+  {
+    userId: uuid("user_id")
+      .primaryKey()
+      .references(() => users.id, { onDelete: "cascade" }),
+    method: canvasMethod("method").notNull(),
+    /**
+     * The access token or feed URL, encrypted (see encryption.ts), that sync
+     * pulls from Canvas with. One column for both, so a row can't have both.
+     */
+    secret: text("secret"),
+    /**
+     * SHA-256 of the extension's device token, never the token itself. The
+     * server never pulls for the extension: the extension posts with this
+     * token instead (see extension.ts).
+     */
+    deviceTokenHash: text("device_token_hash").unique(),
+    connectedAt: timestamp("connected_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  // Exactly one credential per row, the one its method uses: a secret to pull
+  // with, or a device token hash to check posts against.
+  (t) => [
+    check(
+      "canvas_connections_one_credential",
+      sql`(${t.method} = 'extension') = (${t.secret} is null) and (${t.method} = 'extension') = (${t.deviceTokenHash} is not null)`,
+    ),
+  ],
+);
+
+// One per user, made when the student asks to pair the extension (see
+// extension.ts). Asking again replaces it, and pairing deletes it, so a code
+// works once. Only the hash is stored: unlike a feed URL, a code never has to
+// be shown again.
+export const pairingCodes = pgTable("pairing_codes", {
   userId: uuid("user_id")
     .primaryKey()
     .references(() => users.id, { onDelete: "cascade" }),
-  method: canvasMethod("method").notNull(),
-  /**
-   * The access token or feed URL, encrypted (see encryption.ts). One column
-   * for both, so a row can't have both or neither.
-   */
-  secret: text("secret").notNull(),
-  connectedAt: timestamp("connected_at", { withTimezone: true }).notNull().defaultNow(),
+  /** SHA-256 of the code. Pairing looks the code up by it. */
+  codeHash: text("code_hash").notNull().unique(),
+  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
 });
 
 export const eventKind = pgEnum("event_kind", ["assignment", "quiz", "discussion", "event"]);
